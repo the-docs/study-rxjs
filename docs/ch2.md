@@ -66,3 +66,4 @@ newsPaper.add({
 [link5]: "/src/ch2/ex2.5.js"
 [link6]: "/src/ch2/ex2.6.js"
 [link7]: "/src/ch2/ex2.7.js"
+[link8]: "/src/ch2/ex2.8.js"
