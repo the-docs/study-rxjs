@@ -1,0 +1,36 @@
+# 6 RxJS의 핵심 Observable
+
+## 6.1 함수와 Observable
+- [ex6.1][link1]
+- [ex6.2][link2]
+- [ex6.3][link3]
+
+## 6.2 Promise와 Observable
+
+### 6.2.1 Lazy
+- [ex6.4][link4]
+- [ex6.5][link5]
+- [ex6.6][link6]
+
+### 6.2.2 Cancellation
+- [ex6.7][link7]
+- [ex6.8][link8]
+
+### 6.3 함수 vs Observable vs Promise
+
+## 6.4 Pull과 Push가 가지는 의미
+
+### 6.4.1 Push 방식은 데이터 처리에 따른 오류 처리가 필요없다.
+
+### 6.4.2 Push 방식은 리액트브하다.
+
+## 6.5 정리
+
+[link1]: "/src/ch6/ex6.1.js"
+[link2]: "/src/ch6/ex6.2.js"
+[link3]: "/src/ch6/ex6.3.js"
+[link4]: "/src/ch6/ex6.4.js"
+[link5]: "/src/ch6/ex6.5.js"
+[link6]: "/src/ch6/ex6.6.js"
+[link7]: "/src/ch6/ex6.7.js"
+[link8]: "/src/ch6/ex6.8.js"
