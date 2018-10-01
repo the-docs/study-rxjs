@@ -26,20 +26,50 @@ const hideLoading = function() {
 }
 
 const { fromEvent } = rxjs;
-const { map, mergeMap, debounceTime, filter, distinctUntilChanged, tap } = rxjs.operators;
+const {
+  map,
+  switchMap,
+  debounceTime,
+  filter,
+  distinctUntilChanged,
+  tap,
+  partition,
+  // catchError,
+  retry,
+} = rxjs.operators;
 const { ajax } = rxjs.ajax;
 
-const user$ = fromEvent(document.getElementById('search'), 'keyup')
+const keyup$ = fromEvent(document.getElementById('search'), 'keyup')
   .pipe(
     debounceTime(300),
     map(event => event.target.value),
     distinctUntilChanged(),
-    filter(query => query.trim().length > 0),
-    tap(showLoading),
-    mergeMap(query => ajax.getJSON(`https://api.github.com/search/users?q=${query}`)),
-    tap(hideLoading),
   );
 
-user$.subscribe(value => {
-  drawLayer(value.items)
-});
+const [user$, reset$] = keyup$
+  .pipe(
+    partition(query => query.trim().length > 0),
+  );
+
+user$
+  .pipe(
+    filter(query => query.trim().length > 0),
+    tap(showLoading),
+    switchMap(query => ajax.getJSON(`https://api.github.com/search/users?q=${query}`)),
+    tap(hideLoading),
+    retry(2),
+  )
+  .subscribe(
+    value => drawLayer(value.items),
+    error => {
+      console.error(error);
+      alert(error.message);
+    }
+  );
+
+reset$
+  .pipe(
+    filter(query => query.trim().length === 0),
+    tap(v => $layer.innerHTML = ''),
+  )
+  .subscribe();
