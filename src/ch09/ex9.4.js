@@ -52,7 +52,6 @@ const [user$, reset$] = keyup$
 
 user$
   .pipe(
-    filter(query => query.trim().length > 0),
     tap(showLoading),
     map(query => ajax.getJSON(`https://api.github.com/search/users?q=${query}`)),
     switchAll(),
@@ -64,7 +63,6 @@ user$
 
 reset$
   .pipe(
-    filter(query => query.trim().length === 0),
     tap(v => $layer.innerHTML = ''),
   )
   .subscribe();
