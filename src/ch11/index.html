@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>RxJS 11</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+  <style>
+  .carousel-view {
+    overflow: hidden;
+  }
+  .carousel-container {
+    white-space: nowrap;
+    padding: 0px;
+    list-style: none;
+    font-size: 0;
+  }
+  .carousel-panel {
+    width: 100%;
+    min-height: 200px;
+    display: inline-block;
+  }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Carousel UI</h1>
+    <div class="carousel-view" id="carousel">
+      <ul class="carousel-container">
+        <li class="carousel-panel bg-primary"></li>
+        <li class="carousel-panel bg-secondary"></li>
+        <li class="carousel-panel bg-success"></li>
+        <li class="carousel-panel bg-danger"></li>
+        <li class="carousel-panel bg-warning"></li>
+        <li class="carousel-panel bg-info"></li>
+      </ul>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/6.3.2/rxjs.umd.js"></script>
+  <script src="ex11.14.js"></script>
+</body>
+</html>
