@@ -9,24 +9,33 @@ const EVENTS = {
   end: SUPPORT_TOUCH ? 'touchend' : 'mouseup',
 };
 
-const { fromEvent } = rxjs;
 const {
+  fromEvent,
+  merge,
+} = rxjs;
+const {
+  startWith,
   map,
-  takeUntil,
-  // mergeAll,
-  // mergeMap,
   switchMap,
+  takeUntil,
+  first,
+  share,
+  withLatestFrom,
 } = rxjs.operators;
 
-function toPos(obs$) {
-  return obs$.pipe(
-    map(v => SUPPORT_TOUCH ? v.changedTouchs[0].pageX : v.pageX),
+function toPos(obserable$) {
+  return obserable$.pipe(
+    map(v => SUPPORT_TOUCH ? v.changedTouches[0].pageX : v.pageX),
   );
 }
 
 const start$ = fromEvent($view, EVENTS.start).pipe(toPos);
 const move$ = fromEvent($view, EVENTS.move).pipe(toPos);
 const end$ = fromEvent($view, EVENTS.end);
+const size$ = fromEvent(window, 'resize').pipe(
+  startWith(0),
+  map(event => $view.clientWidth),
+);
 
 const drag$ = start$.pipe(
   switchMap(start => {
@@ -35,6 +44,20 @@ const drag$ = start$.pipe(
       takeUntil(end$),
     );
   }),
+  share(),
 );
+// drag$.subscribe(distance => console.log('drag$', distance));
 
-drag$.subscribe(distance => console.log('start$와 move$의 차이 값', distance));
+const drop$ = drag$.pipe(
+  switchMap(drag => {
+    return end$.pipe(
+      map(event => drag),
+      first(),
+    );
+  }),
+  withLatestFrom(size$),
+);
+// drop$.subscribe(array => console.log('drop$', array));
+
+const carousel$ = merge(drag$, drop$);
+carousel$.subscribe(v => console.log(v));

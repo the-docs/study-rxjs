@@ -22,7 +22,6 @@ const start$ = fromEvent($view, EVENTS.start);
 const move$ = fromEvent($view, EVENTS.move);
 const end$ = fromEvent($view, EVENTS.end);
 
-const drag$ = start$
-.pipe(
+const drag$ = start$.pipe(
   switchMap(start => move$.pipe(takeUntil(end$))),
 );
