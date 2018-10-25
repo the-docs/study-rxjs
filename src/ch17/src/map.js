@@ -29,7 +29,6 @@ function createNaverMap($map) {
 function createNaverInfoWindow() {
     return new naver.maps.InfoWindow();
 }
-
 export default class Map {
     // 네이버 지도API를 이용하여 지도의 중앙을 주어진 좌표로 이동하고 지도의 zoom을 11로 지정한다. 또한 infoWindow를 닫는다.
     centerMapAndCloseWindow(coord) {
@@ -98,38 +97,34 @@ export default class Map {
         this.naverMap = createNaverMap($map);
         this.infowindow = createNaverInfoWindow();
 
-        const station$ = this.crateDragend$().pipe(
+        const station$ = this.createDragend().pipe(
             this.mapStation,
             this.manageMarker.bind(this),
             this.mapMarkerClick,
             this.mapBus,
         );
-
-        station$.subscribe(({ markerInfo, buses }) => {
-            if (this.isOpenInfoWindow(markerInfo.position)) {
-                this.openInfoWindow(
-                    markerInfo.marker,
-                    markerInfo.position,
-                    this.render(buses, markerInfo)
-                );
+        station$.subscribe(({ marker, buses }) => {
+            if (this.isOpenInfoWindow(marker.position)) {
+                this.openInfoWindow(marker, marker.position, this.render({ marker, buses }));
             } else {
                 this.closeInfoWindow();
             }
         });
+
     }
 
-    crateDragend$() {
+    createDragend() {
         return fromEvent(this.naverMap, 'dragend').pipe(
             map(({ coord }) => ({
-                latitude: coord.y,
-                longitude: coord.x,
+                lat: coord.y,
+                lon: coord.x,
             })),
         );
     }
 
     mapStation(coord$) {
         return coord$.pipe(
-            switchMap(coord => ajax.getJSON(`/station/around/${coord.longitude}/${coord.latitude}`)),
+            switchMap(coord => ajax.getJSON(`/station/around/${coord.lon}/${coord.lat}`)),
             pluck('busStationAroundList'),
         );
     }
@@ -142,45 +137,35 @@ export default class Map {
                 marker.setOptions('name', station.stationName);
                 return marker;
             })),
-            scan((prev, markers) => {
+            scan((prev, stations) => {
                 prev.forEach(this.deleteMarker);
-                prev = markers;
+                prev = stations;
                 return prev;
             }, []),
-            mergeMap(markers => from(markers)),
+            mergeMap(stations => from(stations)),
         );
     }
 
     mapMarkerClick(marker$) {
         return marker$.pipe(
             mergeMap(marker => fromEvent(marker, 'click')),
-            map(({ overlay }) => ({
-                marker: overlay,
-                position: overlay.getPosition(),
-                id: overlay.getOptions('id'),
-                name: overlay.getOptions('name'),
-            })),
+            pluck('overlay'),
         );
     }
 
-    mapBus(markerInfo$) {
-        return markerInfo$.pipe(
-            switchMap(markerInfo => {
-                const marker$ = of(markerInfo);
-                const bus$ = ajax.getJSON(`/bus/pass/station/${markerInfo.id}`).pipe(
+    mapBus(marker$) {
+        return marker$.pipe(
+            switchMap(marker => {
+                const marker$ = of(marker);
+                const buses$ = ajax.getJSON(`/bus/pass/station/${marker.id}`).pipe(
                     pluck('busRouteList'),
                 );
-                
-                return combineLatest(marker$, bus$, (marker, buses) => ({
-                    buses,
-                    markerInfo,
-                }));
+                return combineLatest(marker$, buses$, (marker, buses) => ({ marker, buses }));
             }),
         );
     }
 
-
-    render(buses, { name }) {
+    render({ marker, buses }) {
         const list = buses.map(bus => (`<dd>
             <a href="#">
                 <strong>${bus.routeName}</strong><span>${bus.regionName}</span>
@@ -189,7 +174,8 @@ export default class Map {
         </dd>`)).join('');
 
         return `<dl class="bus-routes">
-            <dt><strong>${name}</strong></dt>${list}
+            <dt><strong>${marker.name}</strong></dt>${list}
         </dl>`;
     }
+
 }
