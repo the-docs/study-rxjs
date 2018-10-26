@@ -97,39 +97,38 @@ export default class Map {
         this.naverMap = createNaverMap($map);
         this.infowindow = createNaverInfoWindow();
 
-        const station$ = this.createDragend().pipe(
+        const station$ = this.createDragend$().pipe(
             this.mapStation,
-            this.manageMarker.bind(this),
-            this.mapMarkerClick,
-            this.mapBus,
+            this.makeMarker.bind(this),
+            this.stationClick,
+            this.mapBuses,
         );
-        station$.subscribe(({ marker, buses }) => {
-            if (this.isOpenInfoWindow(marker.position)) {
-                this.openInfoWindow(marker, marker.position, this.render({ marker, buses }));
+
+        station$.subscribe(({ station, buses }) => {
+            console.log(station, buses);
+
+            if (this.isOpenInfoWindow(station.position)) {
+                this.openInfoWindow(station.marker, station.position, this.render(station, buses));
             } else {
                 this.closeInfoWindow();
             }
         });
-
     }
 
-    createDragend() {
+    createDragend$() {
         return fromEvent(this.naverMap, 'dragend').pipe(
-            map(({ coord }) => ({
-                lat: coord.y,
-                lon: coord.x,
-            })),
+            map(({ coord }) => ({ lat: coord.y, lon: coord.x })),
         );
     }
 
     mapStation(coord$) {
         return coord$.pipe(
-            switchMap(coord => ajax.getJSON(`/station/around/${coord.lon}/${coord.lat}`)),
+            switchMap(({ lat, lon }) => ajax.getJSON(`/station/around/${lon}/${lat}`)),
             pluck('busStationAroundList'),
         );
     }
 
-    manageMarker(station$) {
+    makeMarker(station$) {
         return station$.pipe(
             map(stations => stations.map(station => {
                 const marker = this.createMarker(station.stationName, station.x, station.y);
@@ -142,40 +141,42 @@ export default class Map {
                 prev = stations;
                 return prev;
             }, []),
-            mergeMap(stations => from(stations)),
+            mergeMap(markers => from(markers)),
+        )
+    }
+
+    stationClick(station$) {
+        return station$.pipe(
+            mergeMap(station => fromEvent(station, 'click')),
+            map(({ overlay }) => ({
+                marker: overlay,
+                position: overlay.getPosition(),
+                id: overlay.getOptions('id'),
+                name: overlay.getOptions('name'),
+            })),
         );
     }
 
-    mapMarkerClick(marker$) {
-        return marker$.pipe(
-            mergeMap(marker => fromEvent(marker, 'click')),
-            pluck('overlay'),
-        );
-    }
-
-    mapBus(marker$) {
-        return marker$.pipe(
-            switchMap(marker => {
-                const marker$ = of(marker);
-                const buses$ = ajax.getJSON(`/bus/pass/station/${marker.id}`).pipe(
+    mapBuses(stationInfo$) {
+        return stationInfo$.pipe(
+            switchMap(stationInfo => {
+                const station$ = of(stationInfo);
+                const buses$ = ajax.getJSON(`/bus/pass/station/${stationInfo.id}`).pipe(
                     pluck('busRouteList'),
                 );
-                return combineLatest(marker$, buses$, (marker, buses) => ({ marker, buses }));
+                return combineLatest(station$, buses$, (station, buses) => ({ station, buses }));
             }),
         );
     }
 
-    render({ marker, buses }) {
-        const list = buses.map(bus => (`<dd>
-            <a href="#">
-                <strong>${bus.routeName}</strong><span>${bus.regionName}</span>
-                <span class="type ${getBuesType(bus.routeTypeName)}">${bus.routeTypeName}</span>
-            </a>
-        </dd>`)).join('');
+    render(station, buses) {
 
-        return `<dl class="bus-routes">
-            <dt><strong>${marker.name}</strong></dt>${list}
-        </dl>`;
+        const list = buses.map(bus => {
+            return `<li>${bus.routeTypeName} - ${bus.routeName} </li>`
+        }).join('');
+        return `<div>
+            <h4>${station.name}</h4>
+            ${list}
+        </div>`
     }
-
 }
