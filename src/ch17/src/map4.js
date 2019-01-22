@@ -142,7 +142,7 @@ export default class Map {
                 return prev;
             }, []),
             mergeMap(markers => from(markers)),
-        )
+        );
     }
 
     stationClick(station$) {
@@ -170,13 +170,12 @@ export default class Map {
     }
 
     render(station, buses) {
-
         const list = buses.map(bus => {
             return `<li>${bus.routeTypeName} - ${bus.routeName} </li>`
         }).join('');
         return `<div>
             <h4>${station.name}</h4>
             ${list}
-        </div>`
+        </div>`;
     }
 }
